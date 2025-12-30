@@ -1,0 +1,110 @@
+# FilemakerRevEHR Configuration
+# Copy this file to settings.yaml and update with your credentials
+
+# RevolutionEHR API Configuration
+revolutionehr:
+  # API base URL (update based on your RevolutionEHR instance)
+  base_url: "https://api.revolutionehr.com"
+
+  # Authentication - use either api_key OR oauth credentials
+  # Option 1: API Key authentication
+  api_key: "your-api-key-here"
+
+  # Option 2: OAuth2 authentication
+  # client_id: "your-client-id"
+  # client_secret: "your-client-secret"
+
+  # Request timeout in seconds
+  timeout: 30
+
+# FileMaker Data Extraction Configuration
+filemaker:
+  # Extraction method: "odbc", "xml", or "file"
+  method: "file"
+
+  # ODBC Configuration (if method is "odbc")
+  odbc:
+    # Option 1: Use DSN
+    dsn: "FileMaker_DSN"
+
+    # Option 2: Direct connection
+    # host: "localhost"
+    # database: "YourDatabase.fmp12"
+
+    # Credentials
+    username: "Admin"
+    password: "your-password"
+
+  # File export configuration (if method is "file" or "xml")
+  exports:
+    # Directory where FileMaker exports files
+    directory: "./exports"
+    encoding: "utf-8"
+
+    # Expected export file names
+    patients_file: "patients.csv"
+    contact_lens_rx_file: "contact_lens_rx.csv"
+    glasses_rx_file: "glasses_rx.csv"
+
+# Field Mappings
+# Map your FileMaker field names to standard field names
+field_mappings:
+  patient:
+    # FileMaker field name: standard field name
+    "First Name": "first_name"
+    "Last Name": "last_name"
+    "DOB": "date_of_birth"
+    "Address 1": "street1"
+    "City": "city"
+    "State": "state"
+    "Zip": "postal_code"
+    "Home Phone": "home_phone"
+    "Cell Phone": "mobile_phone"
+    "Email": "email"
+    "Patient ID": "filemaker_id"
+
+  contact_lens_rx:
+    "Rx ID": "rx_id"
+    "Patient ID": "patient_id"
+    "OD Sphere": "od_sphere"
+    "OD Cyl": "od_cylinder"
+    "OD Axis": "od_axis"
+    "OD BC": "od_base_curve"
+    "OD Dia": "od_diameter"
+    "OD Brand": "od_brand"
+    "OS Sphere": "os_sphere"
+    "OS Cyl": "os_cylinder"
+    "OS Axis": "os_axis"
+    "OS BC": "os_base_curve"
+    "OS Dia": "os_diameter"
+    "OS Brand": "os_brand"
+
+  glasses_rx:
+    "Rx ID": "rx_id"
+    "Patient ID": "patient_id"
+    "OD Sph": "od_sphere"
+    "OD Cyl": "od_cylinder"
+    "OD Axis": "od_axis"
+    "OD Add": "od_add"
+    "OS Sph": "os_sphere"
+    "OS Cyl": "os_cylinder"
+    "OS Axis": "os_axis"
+    "OS Add": "os_add"
+    "PD": "pd_distance"
+
+# Sync Configuration
+sync:
+  # Batch size for API requests
+  batch_size: 50
+
+  # Continue on individual record errors
+  continue_on_error: true
+
+  # Log level (DEBUG, INFO, WARNING, ERROR)
+  log_level: "INFO"
+
+# Logging
+logging:
+  level: "INFO"
+  file: "logs/filemaker_revehr.log"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
