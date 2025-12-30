@@ -64,59 +64,58 @@ def transaction_to_revehr_cl_rx(tx: Transaction) -> Optional[Dict[str, Any]]:
     if not tx.has_cl_rx():
         return None
 
-    # Build RevEHR CL Rx payload
+    # Build RevEHR CL Rx payload (field names from RevEHR API docs)
+    # Note: patient_id is passed separately to API call in sync.py
     payload = {
-        'patient_id': tx.patient_id,
+        # Rx metadata
         'rx_date': tx.transaction_date.isoformat() if tx.transaction_date else None,
-        'prescriber': tx.doctor,
-        'fitting_type': tx.cl_fitting_proc,
         'expiration_date': tx.expiration_date.isoformat() if tx.expiration_date else None,
 
-        # OD (Right Eye)
-        'od_lens': tx.cl_od.lens_name,
+        # OD (Right Eye) - RevEHR field names
+        'od_product_name': tx.cl_od.lens_name,
         'od_base_curve': tx.cl_od.base_curve,
         'od_diameter': tx.cl_od.diameter,
         'od_sphere': tx.cl_od.sphere,
         'od_cylinder': tx.cl_od.cylinder,
-        'od_axis': tx.cl_od.axis,
+        'od_axis': str(tx.cl_od.axis) if tx.cl_od.axis else None,
         'od_add': tx.cl_od.add_power,
+        'od_lens_type': 'soft',  # Default; could detect from lens name
 
-        # OS (Left Eye)
-        'os_lens': tx.cl_os.lens_name,
+        # OS (Left Eye) - RevEHR field names
+        'os_product_name': tx.cl_os.lens_name,
         'os_base_curve': tx.cl_os.base_curve,
         'os_diameter': tx.cl_os.diameter,
         'os_sphere': tx.cl_os.sphere,
         'os_cylinder': tx.cl_os.cylinder,
-        'os_axis': tx.cl_os.axis,
+        'os_axis': str(tx.cl_os.axis) if tx.cl_os.axis else None,
         'os_add': tx.cl_os.add_power,
+        'os_lens_type': 'soft',  # Default; could detect from lens name
 
-        # Source reference
-        'external_id': tx.transaction_num,
-        'source': 'FileMaker',
-        'notes': tx.notes,
+        # External reference for deduplication
+        'external_rx_id': tx.transaction_num,
     }
 
-    # Add alternate lens data if present
+    # Add alternate lens data if present (secondary Rx in FileMaker)
     if tx.cl_od_alt.has_data():
-        payload['od_alt_lens'] = tx.cl_od_alt.lens_name
+        payload['od_alt_product_name'] = tx.cl_od_alt.lens_name
         payload['od_alt_base_curve'] = tx.cl_od_alt.base_curve
         payload['od_alt_diameter'] = tx.cl_od_alt.diameter
         payload['od_alt_sphere'] = tx.cl_od_alt.sphere
         payload['od_alt_cylinder'] = tx.cl_od_alt.cylinder
-        payload['od_alt_axis'] = tx.cl_od_alt.axis
+        payload['od_alt_axis'] = str(tx.cl_od_alt.axis) if tx.cl_od_alt.axis else None
         payload['od_alt_add'] = tx.cl_od_alt.add_power
 
     if tx.cl_os_alt.has_data():
-        payload['os_alt_lens'] = tx.cl_os_alt.lens_name
+        payload['os_alt_product_name'] = tx.cl_os_alt.lens_name
         payload['os_alt_base_curve'] = tx.cl_os_alt.base_curve
         payload['os_alt_diameter'] = tx.cl_os_alt.diameter
         payload['os_alt_sphere'] = tx.cl_os_alt.sphere
         payload['os_alt_cylinder'] = tx.cl_os_alt.cylinder
-        payload['os_alt_axis'] = tx.cl_os_alt.axis
+        payload['os_alt_axis'] = str(tx.cl_os_alt.axis) if tx.cl_os_alt.axis else None
         payload['os_alt_add'] = tx.cl_os_alt.add_power
 
-    # Remove None values
-    return {k: v for k, v in payload.items() if v is not None}
+    # Remove None and empty values
+    return {k: v for k, v in payload.items() if v is not None and v != ''}
 
 
 def filter_cl_transactions(transactions: List[Transaction]) -> List[Transaction]:
