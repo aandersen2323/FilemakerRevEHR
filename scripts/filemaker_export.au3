@@ -45,22 +45,21 @@ If $loginWin <> 0 Then
     WinActivate($loginWin)
     Sleep(1000)
     
-    ; Password field is focused first
     Send($FM_PASSWORD)
     Sleep(300)
-    ; Tab 5 times to get to username field
     Send("{TAB}{TAB}{TAB}{TAB}{TAB}")
     Sleep(300)
     Send($FM_LOGIN)
     Sleep(300)
     Send("{ENTER}")
-    Sleep(5000)
+    ; Wait longer for files to load after login
+    Sleep(10000)
 EndIf
 
 ; STEP 3: After login - MAXIMIZE for consistent coordinates
-Local $mainWin = WinWait("FileMaker Pro", "", 10)
+Local $mainWin = WinWait("FileMaker Pro", "", 15)
 If $mainWin = 0 Then
-    $mainWin = WinWait("Patients", "", 5)
+    $mainWin = WinWait("Patients", "", 10)
 EndIf
 
 If $mainWin <> 0 Then
@@ -68,32 +67,45 @@ If $mainWin <> 0 Then
     WinSetState($mainWin, "", @SW_MAXIMIZE)
     Sleep(2000)
     
-    ; Reports Menu button (green) - in Reports section
-    MouseClick("left", 255, 270)
+    ; On maximized 2560x1080, teal content area starts at approximately:
+    ; x=45 (left panel), y=65 (title bar + toolbar)
+    ; Manager Menu button (purple, bottom-right of teal): x=395, y=310 within teal
+    ; Absolute: x=45+395=440, y=65+310=375
+    MouseClick("left", 440, 375)
     Sleep(2000)
 EndIf
 
-; STEP 4: Business Reports - Click LOWER Internals button
+; STEP 4: Manager Reports - Click LOWER Internals button (yellow)
 Sleep(1000)
-MouseClick("left", 235, 310)
+; Lower Internals in Business Reports section: approximately x=235, y=295 within teal
+; Absolute: x=45+235=280, y=65+295=360
+MouseClick("left", 280, 360)
 Sleep(3000)
 
 ; STEP 5: Report Setup - Enter date range
-MouseClick("left", 290, 205)
+; Date field approximately at x=250, y=125 within teal
+; Absolute: x=45+250=295, y=65+125=190
+MouseClick("left", 295, 190)
 Sleep(300)
 Send("^a")
 Sleep(100)
 Send($dateRange)
 Sleep(500)
 
-; Click Continue button
-MouseClick("left", 55, 305)
+; Continue button on left side, approximately x=-20 (in left panel), y=225
+; Absolute: x=25, y=65+225=290
+MouseClick("left", 25, 290)
 Sleep(5000)
 
 ; STEP 6: Internals Report - Click Month button, then View
-MouseClick("left", 665, 155)
+; Month button in button row, approximately x=580, y=105 within teal
+; Absolute: x=45+580=625, y=65+105=170
+MouseClick("left", 625, 170)
 Sleep(1000)
-MouseClick("left", 750, 140)
+
+; View button approximately x=665, y=95 within teal
+; Absolute: x=45+665=710, y=65+95=160
+MouseClick("left", 710, 160)
 Sleep(3000)
 
 ; STEP 7: Save as PDF
@@ -110,6 +122,6 @@ Sleep(2000)
 Send("{ENTER}")
 Sleep(1000)
 
-; STEP 8: Snap window to left half of screen (Win + Left Arrow)
+; STEP 8: Snap window to left half
 Send("#Left")
 Sleep(500)
