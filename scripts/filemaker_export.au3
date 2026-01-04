@@ -31,13 +31,77 @@ If @error Then
     Exit
 EndIf
 
-MsgBox(0, "Status", "FileMaker launched. Click OK after FileMaker window appears.")
+; Wait for FileMaker to start
+Sleep(5000)
 
-; Find FileMaker window - try different title patterns
+; Look for any FileMaker window
 Local $hwnd = 0
 Local $winTitle = ""
-Local $titles[4] = ["FileMaker Pro", "MAINPROEYE", "Open", "FileMaker"]
-For $i = 0 To 3
+Local $titles[5] = ["Open Password", "FileMaker Pro", "MAINPROEYE", "Open", "FileMaker"]
+For $i = 0 To 4
+    $hwnd = WinWait($titles[$i], "", 3)
+    If $hwnd <> 0 Then
+        $winTitle = $titles[$i]
+        ExitLoop
+    EndIf
+Next
+
+If $hwnd = 0 Then
+    MsgBox(16, "Error", "Could not find FileMaker window.")
+    Exit
+EndIf
+
+MsgBox(0, "Found", "Found window: " & $winTitle)
+
+; Check if this is already a password dialog
+If StringInStr($winTitle, "Password") Then
+    ; Already at login dialog
+    WinActivate($hwnd)
+    Sleep(500)
+Else
+    ; Need to trigger login dialog with Shift+Enter
+    WinActivate($hwnd)
+    Sleep(1000)
+    Send("+{ENTER}")
+    Sleep(2000)
+    
+    ; Wait for password dialog
+    Local $pwdHwnd = WinWait("Open Password", "", 10)
+    If $pwdHwnd = 0 Then
+        $pwdHwnd = WinWait("Password", "", 5)
+    EndIf
+    If $pwdHwnd <> 0 Then
+        WinActivate($pwdHwnd)
+        Sleep(500)
+    EndIf
+EndIf
+
+MsgBox(0, "Login", "About to enter credentials. Click OK.")
+
+; Click in the username field first to make sure it's focused
+Sleep(500)
+Send("{TAB}{TAB}{TAB}")  ; Tab through to get to username field
+Sleep(200)
+Send("^a")  ; Select all in case there's existing text
+Sleep(100)
+Send($FM_LOGIN)
+Sleep(300)
+Send("{TAB}")
+Sleep(200)
+Send($FM_PASSWORD)
+Sleep(300)
+
+MsgBox(0, "Credentials", "Entered: " & $FM_LOGIN & " / " & $FM_PASSWORD & @CRLF & "Click OK to press Enter")
+
+Send("{ENTER}")
+Sleep(5000)
+
+; Now find the main FileMaker window
+$hwnd = 0
+$titles[0] = "MAINPROEYE"
+$titles[1] = "FileMaker Pro"
+$titles[2] = "Open"
+For $i = 0 To 2
     $hwnd = WinWait($titles[$i], "", 5)
     If $hwnd <> 0 Then
         $winTitle = $titles[$i]
@@ -46,32 +110,16 @@ For $i = 0 To 3
 Next
 
 If $hwnd = 0 Then
-    MsgBox(16, "Error", "Could not find FileMaker window. Please check if FileMaker is open.")
+    MsgBox(16, "Error", "Could not find main window after login.")
     Exit
 EndIf
 
-MsgBox(0, "Found", "Found window: " & $winTitle & @CRLF & "Handle: " & $hwnd)
+MsgBox(0, "Status", "Logged in. Main window: " & $winTitle & @CRLF & "Click OK to continue to Menu.")
 
 WinActivate($hwnd)
-Sleep(2000)
+Sleep(1000)
 
-; Open with Shift+Enter for login
-Send("+{ENTER}")
-Sleep(3000)
-
-; Enter credentials
-Send($FM_LOGIN)
-Sleep(200)
-Send("{TAB}")
-Sleep(200)
-Send($FM_PASSWORD)
-Sleep(200)
-Send("{ENTER}")
-Sleep(5000)
-
-MsgBox(0, "Status", "Logged in. Click OK to continue to Menu.")
-
-; Get window size using handle directly
+; Get window position
 Local $winW = 1024
 Local $winH = 768
 Local $winX = 0
