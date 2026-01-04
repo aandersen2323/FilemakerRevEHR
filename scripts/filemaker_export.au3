@@ -1,7 +1,8 @@
 #include <Date.au3>
 
 ; Configuration
-Global $FM_PATH = "C:\Program Files\FileMaker\FileMaker Pro 9\FileMaker Pro.exe"
+Global $FM_PATH = "C:\Program Files (x86)\FileMaker\FileMaker Pro 9\FileMaker Pro.exe"
+Global $FM_DATABASE = "C:\1Program\Open.fp7"
 Global $FM_LOGIN = "manager"
 Global $FM_PASSWORD = "eynner"
 Global $EXPORT_DIR = "C:\FilemakerRevEHR\exports"
@@ -23,8 +24,8 @@ MsgBox(0, "Monthly Report Export", "Will export: " & $dateRange & @CRLF & @CRLF 
 ; Create export dir
 If Not FileExists($EXPORT_DIR) Then DirCreate($EXPORT_DIR)
 
-; Launch FileMaker
-Run($FM_PATH)
+; Launch FileMaker with database
+Run($FM_PATH & ' "' & $FM_DATABASE & '"')
 If @error Then
     MsgBox(16, "Error", "Could not launch FileMaker at:" & @CRLF & $FM_PATH)
     Exit
@@ -35,8 +36,8 @@ MsgBox(0, "Status", "FileMaker launched. Click OK after FileMaker window appears
 ; Find FileMaker window - try different title patterns
 Local $hwnd = 0
 Local $winTitle = ""
-Local $titles[3] = ["FileMaker Pro", "MAINPROEYE", "FileMaker"]
-For $i = 0 To 2
+Local $titles[4] = ["FileMaker Pro", "MAINPROEYE", "Open", "FileMaker"]
+For $i = 0 To 3
     $hwnd = WinWait($titles[$i], "", 5)
     If $hwnd <> 0 Then
         $winTitle = $titles[$i]
