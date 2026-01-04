@@ -32,13 +32,9 @@ Local $quickStart = WinWait("FileMaker Quick Start", "", 5)
 If $quickStart <> 0 Then
     WinActivate($quickStart)
     Sleep(500)
-    ; Click on "Open-MAINPROEYE" in the recent files list (right side of dialog)
-    ; The list is roughly in center-right of the dialog
     Local $qsPos = WinGetPos($quickStart)
     If IsArray($qsPos) Then
-        MouseClick("left", $qsPos[0] + 250, $qsPos[1] + 180)
-        Sleep(500)
-        ; Double-click to open
+        ; Double-click on "Open-MAINPROEYE" in recent files list
         MouseClick("left", $qsPos[0] + 250, $qsPos[1] + 180, 2)
     EndIf
     Sleep(3000)
@@ -54,16 +50,13 @@ If $loginWin <> 0 Then
     WinActivate($loginWin)
     Sleep(500)
     
-    ; Click "Account Name and Password" radio button if needed
-    ; Then click in Account Name field and enter credentials
     Local $loginPos = WinGetPos($loginWin)
     If IsArray($loginPos) Then
-        ; Click in the Account Name field (middle of dialog)
+        ; Click in the Account Name field
         MouseClick("left", $loginPos[0] + ($loginPos[2] / 2), $loginPos[1] + 95)
         Sleep(200)
     EndIf
     
-    ; Clear and enter username
     Send("^a")
     Sleep(100)
     Send($FM_LOGIN)
@@ -72,13 +65,12 @@ If $loginWin <> 0 Then
     Sleep(200)
     Send($FM_PASSWORD)
     Sleep(300)
-    
-    ; Click OK button
     Send("{ENTER}")
     Sleep(5000)
 EndIf
 
-; STEP 3: Main Menu - Click Manager Menu button (purple, bottom-right of menu area)
+; STEP 3: Main Menu - Click REPORTS Menu button (GREEN, in Reports section)
+; NOT Manager Menu - it's the Reports Menu button
 Local $mainWin = WinWait("FileMaker Pro", "", 10)
 If $mainWin = 0 Then
     $mainWin = WinWait("Patients", "", 5)
@@ -89,24 +81,20 @@ If $mainWin <> 0 Then
     WinSetState($mainWin, "", @SW_MAXIMIZE)
     Sleep(1000)
     
-    ; Manager Menu button is in the bottom-right of the teal menu area
-    ; Based on screenshot: approximately at x=395, y=308 relative to menu area
-    ; Menu area starts around x=45 from left edge
-    ; Manager button appears to be around x=395, y=310 in the FileMaker content area
-    MouseClick("left", 435, 340)
+    ; Reports Menu button is green, in the Reports section (middle-left area)
+    ; From screenshot: Reports section is below Lookups, Menu button around x=207, y=192
+    MouseClick("left", 245, 225)
     Sleep(2000)
 EndIf
 
-; STEP 4: Manager Reports - Click Internals button (yellow, in Business Reports section)
+; STEP 4: Business Reports screen - Click LOWER Internals button (yellow)
+; There are two Internals buttons - we want the LOWER one
 Sleep(1000)
-; Internals button is in the Business Reports section, yellow button
-; Based on screenshot: around x=234, y=231
-MouseClick("left", 270, 260)
+; Lower Internals button is below the upper one, around y=231
+MouseClick("left", 270, 265)
 Sleep(3000)
 
 ; STEP 5: Report Setup - Enter date range and click Continue
-; Date field is in the center of the screen
-; First click in the date field
 MouseClick("left", 290, 155)
 Sleep(300)
 Send("^a")
@@ -120,20 +108,16 @@ Sleep(5000)
 
 ; STEP 6: Internals Report - Click Month sort button, then View
 ; Month button is in the top-right button group
-; Based on screenshot: Month button around x=628, y=76
 MouseClick("left", 665, 108)
 Sleep(1000)
 
 ; Click View button (green, top-right)
-; Based on screenshot: around x=711, y=62
 MouseClick("left", 750, 95)
 Sleep(3000)
 
 ; STEP 7: Save as PDF from Preview
-; File menu -> Save as PDF (or Print)
 Send("!f")
 Sleep(500)
-; Look for "Save as PDF" or use "p" for print then save as PDF
 Send("v")
 Sleep(2000)
 
@@ -149,13 +133,11 @@ Send($fullPath)
 Sleep(500)
 Send("{ENTER}")
 Sleep(2000)
-
-; Handle any confirmation dialogs
 Send("{ENTER}")
 Sleep(1000)
 
 ; Close FileMaker
 Send("!{F4}")
 Sleep(1000)
-Send("n")  ; Don't save changes if prompted
+Send("n")
 Sleep(500)
