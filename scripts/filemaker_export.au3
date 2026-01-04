@@ -7,11 +7,8 @@ Global $FM_LOGIN = "manager"
 Global $FM_PASSWORD = "eynner"
 Global $EXPORT_DIR = "C:\FilemakerRevEHR\exports"
 Global $EXPORT_FILE = "monthly_report.pdf"
-Global $W = 500
-Global $WM = 1500
-Global $WL = 3000
 
-; Calculate previous month date range
+; Calculate previous month
 Local $y = @YEAR
 Local $m = @MON - 1
 If $m = 0 Then
@@ -22,24 +19,26 @@ Local $days[13] = [0,31,28,31,30,31,30,31,31,30,31,30,31]
 If $m = 2 And Mod($y, 4) = 0 Then $days[2] = 29
 Local $dateRange = StringFormat("%02d/01/%04d...%02d/%02d/%04d", $m, $y, $m, $days[$m], $y)
 
-ConsoleWrite("Date range: " & $dateRange & @CRLF)
+MsgBox(0, "Monthly Report Export", "Will export: " & $dateRange & @CRLF & @CRLF & "Click OK to start. Make sure FileMaker is closed.")
 
-; Create export dir if needed
+; Create export dir
 If Not FileExists($EXPORT_DIR) Then DirCreate($EXPORT_DIR)
 
-; Step 1: Launch FileMaker
-If Not WinExists($FM_WINDOW) Then
-    Run($FM_PATH)
-    WinWaitActive($FM_WINDOW, "", 30)
-EndIf
+; Launch FileMaker
+Run($FM_PATH)
+Sleep(5000)
+
+; Wait for FileMaker window
+WinWait($FM_WINDOW, "", 30)
 WinActivate($FM_WINDOW)
-Sleep($WL)
+WinWaitActive($FM_WINDOW, "", 10)
+Sleep(2000)
 
-; Step 2: Open with Shift for login
+; Open with Shift+Enter for login
 Send("+{ENTER}")
-Sleep($WL)
+Sleep(3000)
 
-; Step 3: Enter credentials
+; Enter credentials
 Send($FM_LOGIN)
 Sleep(200)
 Send("{TAB}")
@@ -47,46 +46,56 @@ Sleep(200)
 Send($FM_PASSWORD)
 Sleep(200)
 Send("{ENTER}")
-Sleep($WL)
+Sleep(5000)
 
-; Step 4: Click Menu button (bottom-right)
-Local $size = WinGetClientSize($FM_WINDOW)
-MouseClick("left", $size[0] - 150, $size[1] - 100)
-Sleep($WM)
+; Get window position
+Local $pos = WinGetPos($FM_WINDOW)
+If @error Then
+    MsgBox(0, "Error", "Could not find FileMaker window")
+    Exit
+EndIf
+Local $winW = $pos[2]
+Local $winH = $pos[3]
+Local $winX = $pos[0]
+Local $winY = $pos[1]
 
-; Step 5: Click lower Internals button
-MouseClick("left", $size[0] / 2, $size[1] * 0.7)
-Sleep($WL)
+; Click Menu button (bottom-right area)
+MouseClick("left", $winX + $winW - 150, $winY + $winH - 100)
+Sleep(2000)
 
-; Step 6: Enter date range
+; Click lower Internals button (center-lower area)
+MouseClick("left", $winX + ($winW / 2), $winY + ($winH * 0.7))
+Sleep(3000)
+
+; Enter date range
 Send("^a")
 Sleep(200)
 Send($dateRange)
-Sleep($W)
+Sleep(500)
 Send("{ENTER}")
-Sleep($WL)
+Sleep(3000)
 
-; Step 7: Select Month sort and View
-MouseClick("left", $size[0] - 200, 100)
-Sleep($W)
-MouseClick("left", $size[0] - 100, 100)
-Sleep($WL)
+; Click Month sort (top-right)
+MouseClick("left", $winX + $winW - 200, $winY + 150)
+Sleep(500)
 
-; Step 8: Save as PDF
+; Click View button (top-right)
+MouseClick("left", $winX + $winW - 100, $winY + 150)
+Sleep(3000)
+
+; Save as PDF: File menu
 Send("!f")
-Sleep($W)
+Sleep(500)
 Send("v")
-Sleep($WM)
+Sleep(2000)
 
+; Enter filename
 Local $fullPath = $EXPORT_DIR & "\" & $EXPORT_FILE
-Send("!n")
-Sleep(200)
-Send("^a")
 Send($fullPath)
-Sleep($W)
+Sleep(500)
 Send("{ENTER}")
-Sleep($WM)
+Sleep(2000)
 Send("{ENTER}")
-Sleep($W)
+Sleep(1000)
 
-ConsoleWrite("Done! PDF saved to: " & $fullPath & @CRLF)
+MsgBox(0, "Done", "PDF exported to: " & $fullPath)
