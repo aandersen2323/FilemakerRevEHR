@@ -8,6 +8,10 @@ Global $FM_PASSWORD = "eynner"
 Global $EXPORT_DIR = "C:\FilemakerRevEHR\exports"
 Global $EXPORT_FILE = "monthly_report.pdf"
 
+; Screen resolution: 2560x1080
+Global $SCREEN_W = 2560
+Global $SCREEN_H = 1080
+
 ; Calculate previous month
 Local $y = @YEAR
 Local $m = @MON - 1
@@ -52,8 +56,8 @@ If $loginWin <> 0 Then
     
     Local $loginPos = WinGetPos($loginWin)
     If IsArray($loginPos) Then
-        ; Click in the Account Name field
-        MouseClick("left", $loginPos[0] + ($loginPos[2] / 2), $loginPos[1] + 95)
+        ; Click in the Account Name field (center of dialog)
+        MouseClick("left", $loginPos[0] + ($loginPos[2] / 2), $loginPos[1] + ($loginPos[3] / 2) - 30)
         Sleep(200)
     EndIf
     
@@ -69,8 +73,7 @@ If $loginWin <> 0 Then
     Sleep(5000)
 EndIf
 
-; STEP 3: Main Menu - Click REPORTS Menu button (GREEN, in Reports section)
-; NOT Manager Menu - it's the Reports Menu button
+; STEP 3: Main Menu - Find window and click Reports Menu (green)
 Local $mainWin = WinWait("FileMaker Pro", "", 10)
 If $mainWin = 0 Then
     $mainWin = WinWait("Patients", "", 5)
@@ -78,42 +81,78 @@ EndIf
 
 If $mainWin <> 0 Then
     WinActivate($mainWin)
-    WinSetState($mainWin, "", @SW_MAXIMIZE)
-    Sleep(1000)
+    Sleep(500)
     
-    ; Reports Menu button is green, in the Reports section (middle-left area)
-    ; From screenshot: Reports section is below Lookups, Menu button around x=207, y=192
-    MouseClick("left", 245, 225)
-    Sleep(2000)
+    ; Get window position - don't maximize, work with natural size
+    Local $winPos = WinGetPos($mainWin)
+    If IsArray($winPos) Then
+        ; FileMaker teal content area starts ~45px from left, ~80px from top
+        ; Reports Menu button (green) is in the teal area at approximately:
+        ; x=210 from teal left, y=190 from teal top
+        Local $tealX = $winPos[0] + 45
+        Local $tealY = $winPos[1] + 80
+        
+        ; Click Reports Menu button (green)
+        MouseClick("left", $tealX + 210, $tealY + 190)
+        Sleep(2000)
+    EndIf
 EndIf
 
-; STEP 4: Business Reports screen - Click LOWER Internals button (yellow)
-; There are two Internals buttons - we want the LOWER one
+; STEP 4: Business Reports - Click LOWER Internals button (yellow)
 Sleep(1000)
-; Lower Internals button is below the upper one, around y=231
-MouseClick("left", 270, 265)
-Sleep(3000)
+$mainWin = WinGetHandle("[ACTIVE]")
+Local $winPos = WinGetPos($mainWin)
+If IsArray($winPos) Then
+    Local $tealX = $winPos[0] + 45
+    Local $tealY = $winPos[1] + 80
+    
+    ; Lower Internals button is at approximately x=190, y=230 in teal area
+    MouseClick("left", $tealX + 190, $tealY + 230)
+    Sleep(3000)
+EndIf
 
 ; STEP 5: Report Setup - Enter date range and click Continue
-MouseClick("left", 290, 155)
-Sleep(300)
+Sleep(1000)
+$winPos = WinGetPos("[ACTIVE]")
+If IsArray($winPos) Then
+    Local $tealX = $winPos[0] + 45
+    Local $tealY = $winPos[1] + 80
+    
+    ; Click in date field (center of teal area, upper portion)
+    MouseClick("left", $tealX + 220, $tealY + 75)
+    Sleep(300)
+EndIf
+
 Send("^a")
 Sleep(100)
 Send($dateRange)
 Sleep(500)
 
-; Click Continue button (left side)
-MouseClick("left", 50, 258)
+; Click Continue button (left side of teal area)
+$winPos = WinGetPos("[ACTIVE]")
+If IsArray($winPos) Then
+    Local $tealX = $winPos[0] + 45
+    Local $tealY = $winPos[1] + 80
+    MouseClick("left", $tealX - 25, $tealY + 200)
+EndIf
 Sleep(5000)
 
-; STEP 6: Internals Report - Click Month sort button, then View
-; Month button is in the top-right button group
-MouseClick("left", 665, 108)
-Sleep(1000)
-
-; Click View button (green, top-right)
-MouseClick("left", 750, 95)
-Sleep(3000)
+; STEP 6: Internals Report - Click Month button, then View
+$winPos = WinGetPos("[ACTIVE]")
+If IsArray($winPos) Then
+    ; Month and View buttons are in top-right area
+    ; For the Internals report view, buttons are further right
+    Local $btnAreaX = $winPos[0] + $winPos[2] - 200
+    Local $btnAreaY = $winPos[1] + 100
+    
+    ; Month button
+    MouseClick("left", $btnAreaX + 30, $btnAreaY)
+    Sleep(1000)
+    
+    ; View button (to the right of Month)
+    MouseClick("left", $btnAreaX + 100, $btnAreaY - 20)
+    Sleep(3000)
+EndIf
 
 ; STEP 7: Save as PDF from Preview
 Send("!f")
@@ -121,7 +160,7 @@ Sleep(500)
 Send("v")
 Sleep(2000)
 
-; Save dialog - enter filename
+; Save dialog
 Local $saveWin = WinWait("Save", "", 5)
 If $saveWin <> 0 Then
     WinActivate($saveWin)
