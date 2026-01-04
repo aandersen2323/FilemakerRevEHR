@@ -27,7 +27,7 @@ Run($FM_PATH & ' "' & $FM_DATABASE & '"')
 If @error Then Exit
 
 ; Wait for FileMaker to start
-Sleep(5000)
+Sleep(8000)
 
 ; Look for any FileMaker window
 Local $hwnd = 0
@@ -43,16 +43,17 @@ Next
 
 If $hwnd = 0 Then Exit
 
-; Check if this is already a password dialog
-If StringInStr($winTitle, "Password") Then
-    WinActivate($hwnd)
-    Sleep(500)
-Else
-    ; Need to trigger login dialog with Shift+Enter
-    WinActivate($hwnd)
-    Sleep(1000)
+; Maximize the window
+WinSetState($hwnd, "", @SW_MAXIMIZE)
+Sleep(1000)
+WinActivate($hwnd)
+Sleep(500)
+
+; Check if this is already a password dialog or need to trigger it
+If Not StringInStr($winTitle, "Password") Then
+    ; Try Shift+Enter to trigger login dialog
     Send("+{ENTER}")
-    Sleep(2000)
+    Sleep(3000)
     
     ; Wait for password dialog
     Local $pwdHwnd = WinWait("Open Password", "", 10)
@@ -61,14 +62,24 @@ Else
     EndIf
     If $pwdHwnd <> 0 Then
         WinActivate($pwdHwnd)
+        $hwnd = $pwdHwnd
         Sleep(500)
     EndIf
 EndIf
 
-; Enter credentials
+; Enter credentials - try clicking in the window first
+WinActivate($hwnd)
 Sleep(500)
-Send("{TAB}{TAB}{TAB}")
-Sleep(200)
+
+; Get login dialog position and click in username field area
+Local $aPos = WinGetPos($hwnd)
+If IsArray($aPos) Then
+    ; Click roughly in center of dialog where username field likely is
+    MouseClick("left", $aPos[0] + ($aPos[2] / 2), $aPos[1] + ($aPos[3] / 2) - 20)
+    Sleep(300)
+EndIf
+
+; Clear and type username
 Send("^a")
 Sleep(100)
 Send($FM_LOGIN)
@@ -78,9 +89,9 @@ Sleep(200)
 Send($FM_PASSWORD)
 Sleep(300)
 Send("{ENTER}")
-Sleep(5000)
+Sleep(8000)
 
-; Now find the main FileMaker window
+; Now find and maximize the main FileMaker window
 $hwnd = 0
 $titles[0] = "MAINPROEYE"
 $titles[1] = "FileMaker Pro"
@@ -95,29 +106,23 @@ Next
 
 If $hwnd = 0 Then Exit
 
+; Maximize main window
+WinSetState($hwnd, "", @SW_MAXIMIZE)
+Sleep(1000)
 WinActivate($hwnd)
 Sleep(1000)
 
-; Get window position
-Local $winW = 1024
-Local $winH = 768
-Local $winX = 0
-Local $winY = 0
+; Get screen size (since maximized)
+Local $screenW = @DesktopWidth
+Local $screenH = @DesktopHeight
 
-Local $aPos = WinGetPos($hwnd)
-If IsArray($aPos) Then
-    $winX = $aPos[0]
-    $winY = $aPos[1]
-    $winW = $aPos[2]
-    $winH = $aPos[3]
-EndIf
-
-; Click Menu button (bottom-right area)
-MouseClick("left", $winX + $winW - 150, $winY + $winH - 100)
+; Click Menu button (bottom-right area of maximized window)
+; Adjust these coordinates based on your screen
+MouseClick("left", $screenW - 150, $screenH - 150)
 Sleep(2000)
 
 ; Click Internals button (center-lower area)
-MouseClick("left", $winX + ($winW / 2), $winY + ($winH * 0.7))
+MouseClick("left", $screenW / 2, $screenH * 0.7)
 Sleep(3000)
 
 ; Enter date range
@@ -128,12 +133,12 @@ Sleep(500)
 Send("{ENTER}")
 Sleep(3000)
 
-; Click Month sort (top-right)
-MouseClick("left", $winX + $winW - 200, $winY + 150)
+; Click Month sort (top-right area)
+MouseClick("left", $screenW - 200, 200)
 Sleep(500)
 
-; Click View button (top-right)
-MouseClick("left", $winX + $winW - 100, $winY + 150)
+; Click View button (top-right area)
+MouseClick("left", $screenW - 100, 200)
 Sleep(3000)
 
 ; Save as PDF: File menu
