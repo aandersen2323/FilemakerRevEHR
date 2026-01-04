@@ -8,6 +8,9 @@ Global $FM_PASSWORD = "eynner"
 Global $EXPORT_DIR = "C:\FilemakerRevEHR\exports"
 Global $EXPORT_FILE = "monthly_report.pdf"
 
+; Screen: 2560x1080, FileMaker maximized
+; Teal content area: ~460x370 pixels, starts at x=45, y=65
+
 ; Calculate previous month
 Local $y = @YEAR
 Local $m = @MON - 1
@@ -39,7 +42,7 @@ If $quickStart <> 0 Then
     Sleep(3000)
 EndIf
 
-; STEP 2: Login - password field is focused first
+; STEP 2: Login - password first, Tab 5x, username, Enter
 Local $loginWin = WinWait("Open", "", 15)
 If $loginWin <> 0 Then
     WinActivate($loginWin)
@@ -52,11 +55,10 @@ If $loginWin <> 0 Then
     Send($FM_LOGIN)
     Sleep(300)
     Send("{ENTER}")
-    ; Wait longer for files to load after login
-    Sleep(10000)
+    Sleep(10000)  ; Wait for files to load
 EndIf
 
-; STEP 3: After login - MAXIMIZE for consistent coordinates
+; STEP 3: Maximize and click Manager Menu (purple, bottom-right)
 Local $mainWin = WinWait("FileMaker Pro", "", 15)
 If $mainWin = 0 Then
     $mainWin = WinWait("Patients", "", 10)
@@ -67,45 +69,37 @@ If $mainWin <> 0 Then
     WinSetState($mainWin, "", @SW_MAXIMIZE)
     Sleep(2000)
     
-    ; On maximized 2560x1080, teal content area starts at approximately:
-    ; x=45 (left panel), y=65 (title bar + toolbar)
-    ; Manager Menu button (purple, bottom-right of teal): x=395, y=310 within teal
-    ; Absolute: x=45+395=440, y=65+310=375
-    MouseClick("left", 440, 375)
+    ; Manager Menu button (purple): teal x=395, y=285 -> absolute (440, 350)
+    MouseClick("left", 440, 350)
     Sleep(2000)
 EndIf
 
-; STEP 4: Manager Reports - Click LOWER Internals button (yellow)
+; STEP 4: Manager Reports - Lower Internals button (yellow)
 Sleep(1000)
-; Lower Internals in Business Reports section: approximately x=235, y=295 within teal
-; Absolute: x=45+235=280, y=65+295=360
-MouseClick("left", 280, 360)
+; Lower Internals: teal x=190, y=195 -> absolute (235, 260)
+MouseClick("left", 235, 260)
 Sleep(3000)
 
 ; STEP 5: Report Setup - Enter date range
-; Date field approximately at x=250, y=125 within teal
-; Absolute: x=45+250=295, y=65+125=190
-MouseClick("left", 295, 190)
+; Date field: teal x=200, y=75 -> absolute (245, 140)
+MouseClick("left", 245, 140)
 Sleep(300)
 Send("^a")
 Sleep(100)
 Send($dateRange)
 Sleep(500)
 
-; Continue button on left side, approximately x=-20 (in left panel), y=225
-; Absolute: x=25, y=65+225=290
-MouseClick("left", 25, 290)
+; Continue button: left panel x=20, y=230 -> absolute (20, 295)
+MouseClick("left", 20, 295)
 Sleep(5000)
 
-; STEP 6: Internals Report - Click Month button, then View
-; Month button in button row, approximately x=580, y=105 within teal
-; Absolute: x=45+580=625, y=65+105=170
-MouseClick("left", 625, 170)
+; STEP 6: Internals Report - Month button then View
+; Month button: approximately (630, 130)
+MouseClick("left", 630, 130)
 Sleep(1000)
 
-; View button approximately x=665, y=95 within teal
-; Absolute: x=45+665=710, y=65+95=160
-MouseClick("left", 710, 160)
+; View button: approximately (750, 115)
+MouseClick("left", 750, 115)
 Sleep(3000)
 
 ; STEP 7: Save as PDF
