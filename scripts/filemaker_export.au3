@@ -39,30 +39,28 @@ If $quickStart <> 0 Then
     Sleep(3000)
 EndIf
 
-; STEP 2: Login - just use keyboard, no clicking
+; STEP 2: Login - password field is focused first
 Local $loginWin = WinWait("Open", "", 15)
 If $loginWin <> 0 Then
     WinActivate($loginWin)
     Sleep(1000)
     
-    ; Just type - assume username field has focus or tab to it
-    Send($FM_LOGIN)
-    Sleep(300)
-    Send("{TAB}")
-    Sleep(200)
+    ; Password field is focused first
     Send($FM_PASSWORD)
+    Sleep(300)
+    ; Tab 5 times to get to username field
+    Send("{TAB}{TAB}{TAB}{TAB}{TAB}")
+    Sleep(300)
+    Send($FM_LOGIN)
     Sleep(300)
     Send("{ENTER}")
     Sleep(5000)
 EndIf
 
-; STEP 3: After login - MAXIMIZE the main window for consistent coordinates
+; STEP 3: After login - MAXIMIZE for consistent coordinates
 Local $mainWin = WinWait("FileMaker Pro", "", 10)
 If $mainWin = 0 Then
     $mainWin = WinWait("Patients", "", 5)
-EndIf
-If $mainWin = 0 Then
-    $mainWin = WinWait("[CLASS:FM9_HostWindow]", "", 5)
 EndIf
 
 If $mainWin <> 0 Then
@@ -70,25 +68,17 @@ If $mainWin <> 0 Then
     WinSetState($mainWin, "", @SW_MAXIMIZE)
     Sleep(2000)
     
-    ; On maximized 2560x1080, the teal content area is fixed size
-    ; Teal area is approximately 460x370 pixels, positioned in upper-left
-    ; Content starts after ~45px left margin and ~80px top (toolbar)
-    
     ; Reports Menu button (green) - in Reports section
-    ; Approximately x=255, y=270 from top-left of screen when maximized
     MouseClick("left", 255, 270)
     Sleep(2000)
 EndIf
 
 ; STEP 4: Business Reports - Click LOWER Internals button
 Sleep(1000)
-; Lower Internals button approximately x=235, y=310
 MouseClick("left", 235, 310)
 Sleep(3000)
 
 ; STEP 5: Report Setup - Enter date range
-; Date field is in center-upper area of teal content
-; Approximately x=290, y=205
 MouseClick("left", 290, 205)
 Sleep(300)
 Send("^a")
@@ -96,17 +86,13 @@ Sleep(100)
 Send($dateRange)
 Sleep(500)
 
-; Click Continue button (left side, in the left panel area)
-; Approximately x=55, y=305
+; Click Continue button
 MouseClick("left", 55, 305)
 Sleep(5000)
 
 ; STEP 6: Internals Report - Click Month button, then View
-; Month button in top-right button group, approximately x=665, y=155
 MouseClick("left", 665, 155)
 Sleep(1000)
-
-; View button (green) approximately x=750, y=140
 MouseClick("left", 750, 140)
 Sleep(3000)
 
@@ -124,8 +110,6 @@ Sleep(2000)
 Send("{ENTER}")
 Sleep(1000)
 
-; Close FileMaker
-Send("!{F4}")
-Sleep(1000)
-Send("n")
+; STEP 8: Snap window to left half of screen (Win + Left Arrow)
+Send("#Left")
 Sleep(500)
