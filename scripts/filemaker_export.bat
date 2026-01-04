@@ -17,8 +17,8 @@ REM ============================================================
 setlocal
 
 REM === CONFIGURATION - EDIT THESE ===
-set "FM_PATH=C:\Program Files\FileMaker\FileMaker Pro 9\FileMaker Pro.exe"
-set "FM_DATABASE=C:\Path\To\Your\Database.fp7"
+set "FM_PATH=C:\Program Files (x86)\FileMaker\FileMaker Pro 9\FileMaker Pro.exe"
+set "FM_DATABASE=C:\1Program\Open.fp7"
 set "EXPORT_DIR=C:\FilemakerRevEHR\exports"
 
 REM Create export directory if needed
