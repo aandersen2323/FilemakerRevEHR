@@ -25,138 +25,137 @@ If Not FileExists($EXPORT_DIR) Then DirCreate($EXPORT_DIR)
 ; Launch FileMaker with database
 Run($FM_PATH & ' "' & $FM_DATABASE & '"')
 If @error Then Exit
-
-; Wait for FileMaker to start
 Sleep(8000)
 
-; Look for any FileMaker window
-Local $hwnd = 0
-Local $winTitle = ""
-Local $titles[5] = ["Open Password", "FileMaker Pro", "MAINPROEYE", "Open", "FileMaker"]
-For $i = 0 To 4
-    $hwnd = WinWait($titles[$i], "", 3)
-    If $hwnd <> 0 Then
-        $winTitle = $titles[$i]
-        ExitLoop
-    EndIf
-Next
-
-If $hwnd = 0 Then Exit
-
-; Maximize the window
-WinSetState($hwnd, "", @SW_MAXIMIZE)
-Sleep(1000)
-WinActivate($hwnd)
-Sleep(500)
-
-; Check if this is already a password dialog or need to trigger it
-If Not StringInStr($winTitle, "Password") Then
-    ; Try Shift+Enter to trigger login dialog
-    Send("+{ENTER}")
-    Sleep(3000)
-    
-    ; Wait for password dialog
-    Local $pwdHwnd = WinWait("Open Password", "", 10)
-    If $pwdHwnd = 0 Then
-        $pwdHwnd = WinWait("Password", "", 5)
-    EndIf
-    If $pwdHwnd <> 0 Then
-        WinActivate($pwdHwnd)
-        $hwnd = $pwdHwnd
+; STEP 1: Handle Quick Start dialog if it appears
+Local $quickStart = WinWait("FileMaker Quick Start", "", 5)
+If $quickStart <> 0 Then
+    WinActivate($quickStart)
+    Sleep(500)
+    ; Click on "Open-MAINPROEYE" in the recent files list (right side of dialog)
+    ; The list is roughly in center-right of the dialog
+    Local $qsPos = WinGetPos($quickStart)
+    If IsArray($qsPos) Then
+        MouseClick("left", $qsPos[0] + 250, $qsPos[1] + 180)
         Sleep(500)
+        ; Double-click to open
+        MouseClick("left", $qsPos[0] + 250, $qsPos[1] + 180, 2)
     EndIf
+    Sleep(3000)
 EndIf
 
-; Enter credentials - try clicking in the window first
-WinActivate($hwnd)
-Sleep(500)
+; STEP 2: Handle Login dialog
+Local $loginWin = WinWait("Open", "Account", 10)
+If $loginWin = 0 Then
+    $loginWin = WinWait("Open", "Password", 10)
+EndIf
 
-; Get login dialog position and click in username field area
-Local $aPos = WinGetPos($hwnd)
-If IsArray($aPos) Then
-    ; Click roughly in center of dialog where username field likely is
-    MouseClick("left", $aPos[0] + ($aPos[2] / 2), $aPos[1] + ($aPos[3] / 2) - 20)
+If $loginWin <> 0 Then
+    WinActivate($loginWin)
+    Sleep(500)
+    
+    ; Click "Account Name and Password" radio button if needed
+    ; Then click in Account Name field and enter credentials
+    Local $loginPos = WinGetPos($loginWin)
+    If IsArray($loginPos) Then
+        ; Click in the Account Name field (middle of dialog)
+        MouseClick("left", $loginPos[0] + ($loginPos[2] / 2), $loginPos[1] + 95)
+        Sleep(200)
+    EndIf
+    
+    ; Clear and enter username
+    Send("^a")
+    Sleep(100)
+    Send($FM_LOGIN)
     Sleep(300)
+    Send("{TAB}")
+    Sleep(200)
+    Send($FM_PASSWORD)
+    Sleep(300)
+    
+    ; Click OK button
+    Send("{ENTER}")
+    Sleep(5000)
 EndIf
 
-; Clear and type username
+; STEP 3: Main Menu - Click Manager Menu button (purple, bottom-right of menu area)
+Local $mainWin = WinWait("FileMaker Pro", "", 10)
+If $mainWin = 0 Then
+    $mainWin = WinWait("Patients", "", 5)
+EndIf
+
+If $mainWin <> 0 Then
+    WinActivate($mainWin)
+    WinSetState($mainWin, "", @SW_MAXIMIZE)
+    Sleep(1000)
+    
+    ; Manager Menu button is in the bottom-right of the teal menu area
+    ; Based on screenshot: approximately at x=395, y=308 relative to menu area
+    ; Menu area starts around x=45 from left edge
+    ; Manager button appears to be around x=395, y=310 in the FileMaker content area
+    MouseClick("left", 435, 340)
+    Sleep(2000)
+EndIf
+
+; STEP 4: Manager Reports - Click Internals button (yellow, in Business Reports section)
+Sleep(1000)
+; Internals button is in the Business Reports section, yellow button
+; Based on screenshot: around x=234, y=231
+MouseClick("left", 270, 260)
+Sleep(3000)
+
+; STEP 5: Report Setup - Enter date range and click Continue
+; Date field is in the center of the screen
+; First click in the date field
+MouseClick("left", 290, 155)
+Sleep(300)
 Send("^a")
 Sleep(100)
-Send($FM_LOGIN)
-Sleep(300)
-Send("{TAB}")
-Sleep(200)
-Send($FM_PASSWORD)
-Sleep(300)
-Send("{ENTER}")
-Sleep(8000)
-
-; Now find and maximize the main FileMaker window
-$hwnd = 0
-$titles[0] = "MAINPROEYE"
-$titles[1] = "FileMaker Pro"
-$titles[2] = "Open"
-For $i = 0 To 2
-    $hwnd = WinWait($titles[$i], "", 5)
-    If $hwnd <> 0 Then
-        $winTitle = $titles[$i]
-        ExitLoop
-    EndIf
-Next
-
-If $hwnd = 0 Then Exit
-
-; Maximize main window
-WinSetState($hwnd, "", @SW_MAXIMIZE)
-Sleep(1000)
-WinActivate($hwnd)
-Sleep(1000)
-
-; Get screen size (since maximized)
-Local $screenW = @DesktopWidth
-Local $screenH = @DesktopHeight
-
-; Click Menu button (bottom-right area of maximized window)
-; Adjust these coordinates based on your screen
-MouseClick("left", $screenW - 150, $screenH - 150)
-Sleep(2000)
-
-; Click Internals button (center-lower area)
-MouseClick("left", $screenW / 2, $screenH * 0.7)
-Sleep(3000)
-
-; Enter date range
-Send("^a")
-Sleep(200)
 Send($dateRange)
 Sleep(500)
-Send("{ENTER}")
+
+; Click Continue button (left side)
+MouseClick("left", 50, 258)
+Sleep(5000)
+
+; STEP 6: Internals Report - Click Month sort button, then View
+; Month button is in the top-right button group
+; Based on screenshot: Month button around x=628, y=76
+MouseClick("left", 665, 108)
+Sleep(1000)
+
+; Click View button (green, top-right)
+; Based on screenshot: around x=711, y=62
+MouseClick("left", 750, 95)
 Sleep(3000)
 
-; Click Month sort (top-right area)
-MouseClick("left", $screenW - 200, 200)
-Sleep(500)
-
-; Click View button (top-right area)
-MouseClick("left", $screenW - 100, 200)
-Sleep(3000)
-
-; Save as PDF: File menu
+; STEP 7: Save as PDF from Preview
+; File menu -> Save as PDF (or Print)
 Send("!f")
 Sleep(500)
+; Look for "Save as PDF" or use "p" for print then save as PDF
 Send("v")
 Sleep(2000)
 
-; Enter filename
+; Save dialog - enter filename
+Local $saveWin = WinWait("Save", "", 5)
+If $saveWin <> 0 Then
+    WinActivate($saveWin)
+    Sleep(500)
+EndIf
+
 Local $fullPath = $EXPORT_DIR & "\" & $EXPORT_FILE
 Send($fullPath)
 Sleep(500)
 Send("{ENTER}")
 Sleep(2000)
+
+; Handle any confirmation dialogs
 Send("{ENTER}")
 Sleep(1000)
 
 ; Close FileMaker
 Send("!{F4}")
 Sleep(1000)
-Send("{ENTER}")
+Send("n")  ; Don't save changes if prompted
+Sleep(500)
